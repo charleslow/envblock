@@ -1,28 +1,33 @@
 # envblock
 
-A math-aware scanner for LaTeX-like braced environments. Two functions, no
-dependencies, one file.
+A javascript math-aware scanner for LaTeX-like braced environments. Just one file with no dependencies.
 
 ```js
 import { scanBraced, readFields } from 'envblock';
 ```
 
-## Why
+## Motivation
 
-LaTeX puts unbalanced braces inside math, so a naive brace counter breaks on
-input like `\theorem{Pythagoras}{If $c = \sqrt{a^2 + b^2}$ then ...}`. The
-scanner here is an explicit state machine: braces inside `$...$` or `$$...$$`
-never touch depth, backslash escapes are literal, and a stray `$` with no
-closing fence is treated as a price, not math.
+We often need a state machine to parse custom brace-like syntax to render them in different ways. For example, a notebook app may have mechanisms like `\theorem{Pythagoras}{If $c = \sqrt{a^2 + b^2}$ then ...}` or `\definition{Policy Gradient Theorem}{...}` that have different rendering rules.
+
+This small file provides the mechanism to parse these without importing a large library.
+
+Some design choices:
+- To support math rendering, braces inside `$...$` or `$$...$$` never touch depth
+- Backslash escapes are literal
+- A stray `$` with no closing fence is treated as a price, not math
 
 ## API
 
-### `scanBraced(source, open, openCh = '{')`
+### scanBraced
 
-Scan the braced field starting at offset `open`. Returns
-`{ content, contentOffset, endOffset }`, or `null` when the field is unclosed
-or `source[open]` is not the opening bracket. `openCh` selects the pair:
-`{`, `[`, or `(`.
+```js
+scanBraced(source, open, openCh = '{')
+```
+
+Scan the braced field starting at offset `open`. 
+
+Returns `{ content, contentOffset, endOffset }`, or `null` when the field is unclosed or `source[open]` is not the opening bracket. `openCh` selects the pair: `{`, `[`, or `(`.
 
 ### `readFields(source, cursor, spec, openCh = '{')`
 
