@@ -1,0 +1,13 @@
+{
+  "name": "envblock",
+  "version": "0.1.0",
+  "description": "Math-aware scanner for LaTeX-like braced environments",
+  "type": "module",
+  "main": "./envblock.js",
+  "exports": "./envblock.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": ["latex", "scanner", "markdown", "remark"],
+  "license": "MIT"
+}
