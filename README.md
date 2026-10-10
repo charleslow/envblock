@@ -47,6 +47,27 @@ const spec = [
 readFields('\\theorem{Pythagoras}{If $c = \\sqrt{a^2 + b^2}$ ...}', 8, spec);
 ```
 
+### readCommandFields
+
+```js
+readCommandFields(source, command, spec, openCh = '{')
+```
+
+Reads fields after the first occurrence of `command`, so you pass the command
+string instead of computing an offset from its length. Returns the same shape
+as `readFields`, or `null` when the command is absent or the fields do not
+parse.
+
+```js
+readCommandFields(
+  '\\theorem{Pythagoras}{If $c = \\sqrt{a^2 + b^2}$ ...}',
+  '\\theorem',
+  spec,
+);
+```
+
+Type declarations for all three functions ship in `envblock.d.ts`.
+
 ## Install
 
 ```sh

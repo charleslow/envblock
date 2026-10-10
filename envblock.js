@@ -19,35 +19,41 @@ export function scanBraced(source, open, openCh = '{') {
   for (let i = open + 1; i < source.length; i++) {
     const ch = source[i];
 
-    if (state === 'MATH') {
-      if (ch === '\\') state = 'MATH_ESC';
-      else if (ch === '$') state = 'TEXT';
-    } else if (state === 'MATH_ESC') {
-      state = 'MATH';
-    } else if (state === 'DISPLAY') {
-      if (ch === '\\') state = 'DISPLAY_ESC';
-      else if (ch === '$' && source[i + 1] === '$') { state = 'TEXT'; i++; }
-    } else if (state === 'DISPLAY_ESC') {
-      state = 'DISPLAY';
-    } else if (state === 'ESC') {
-      state = 'TEXT';
-    } else {
-      if (ch === '\\') state = 'ESC';
-      else if (ch === openCh) depth++;
-      else if (ch === closeCh) {
-        if (--depth === 0) {
-          return { content: source.slice(open + 1, i),
-                   contentOffset: open + 1, endOffset: i + 1 };
+    switch (state) {
+      case 'MATH':
+        if (ch === '\\') state = 'MATH_ESC';
+        else if (ch === '$') state = 'TEXT';
+        break;
+      case 'MATH_ESC':
+        state = 'MATH';
+        break;
+      case 'DISPLAY':
+        if (ch === '\\') state = 'DISPLAY_ESC';
+        else if (ch === '$' && source[i + 1] === '$') { state = 'TEXT'; i++; }
+        break;
+      case 'DISPLAY_ESC':
+        state = 'DISPLAY';
+        break;
+      case 'ESC':
+        state = 'TEXT';
+        break;
+      default:
+        if (ch === '\\') state = 'ESC';
+        else if (ch === openCh) depth++;
+        else if (ch === closeCh) {
+          if (--depth === 0) {
+            return { content: source.slice(open + 1, i),
+                     contentOffset: open + 1, endOffset: i + 1 };
+          }
+        } else if (ch === '$') {
+          const fence = source[i + 1] === '$' ? '$$' : '$';
+          const close = source.indexOf(fence, i + fence.length);
+          const isMath = close !== -1 &&
+            !(fence === '$' && /\n[ \t]*\n/.test(source.slice(i + fence.length, close)));
+          if (!isMath) continue; // a stray $ is a price, not math
+          if (fence === '$$') i++;
+          state = fence === '$$' ? 'DISPLAY' : 'MATH';
         }
-      } else if (ch === '$') {
-        const fence = source[i + 1] === '$' ? '$$' : '$';
-        const close = source.indexOf(fence, i + fence.length);
-        const isMath = close !== -1 &&
-          !(fence === '$' && /\n[ \t]*\n/.test(source.slice(i + fence.length, close)));
-        if (!isMath) continue; // a stray $ is a price, not math
-        if (fence === '$$') i++;
-        state = fence === '$$' ? 'DISPLAY' : 'MATH';
-      }
     }
   }
   return null; // unclosed
@@ -71,4 +77,13 @@ export function readFields(source, cursor, spec, openCh = '{') {
     cursor = end;
   }
   return { fields, end };
+}
+
+// Read fields after the first occurrence of `command`, so callers pass the
+// command instead of computing an offset. Same shape and degrade-to-raw
+// contract as readFields; null when the command is absent.
+export function readCommandFields(source, command, spec, openCh = '{') {
+  const at = source.indexOf(command);
+  if (at === -1) return null;
+  return readFields(source, at + command.length, spec, openCh);
 }
