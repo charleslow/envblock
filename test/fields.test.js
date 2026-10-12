@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFields } from '../envblock.js';
+import { readFields, readCommandFields } from '../envblock.js';
 
 const THEOREM = [
   { name: 'name' },
@@ -109,4 +109,24 @@ test('degrade-to-raw contract: any broken field yields null', () => {
   for (const src of broken) {
     assert.equal(readFields(src, 8, THEOREM), null, src);
   }
+});
+
+test('readCommandFields starts right after the command', () => {
+  const src = '\\theorem{N}{S}';
+  const r = readCommandFields(src, '\\theorem', THEOREM);
+  assert.equal(r.end, src.length);
+  assert.equal(r.fields.name.content, 'N');
+  assert.equal(r.fields.statement.content, 'S');
+});
+
+test('readCommandFields finds the command mid-document', () => {
+  const src = 'text \\theorem{N}{S} tail';
+  const r = readCommandFields(src, '\\theorem', THEOREM);
+  assert.equal(r.end, 19);
+  assert.equal(r.fields.statement.content, 'S');
+});
+
+test('readCommandFields: absent or extended command degrades to raw', () => {
+  assert.equal(readCommandFields('\\lemma{N}{S}', '\\theorem', THEOREM), null);
+  assert.equal(readCommandFields('\\theorems{N}{S}', '\\theorem', THEOREM), null);
 });

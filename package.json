@@ -4,7 +4,13 @@
   "description": "Math-aware scanner for LaTeX-like braced environments",
   "type": "module",
   "main": "./envblock.js",
-  "exports": "./envblock.js",
+  "types": "./envblock.d.ts",
+  "exports": {
+    ".": {
+      "types": "./envblock.d.ts",
+      "default": "./envblock.js"
+    }
+  },
   "scripts": {
     "test": "node --test"
   },
